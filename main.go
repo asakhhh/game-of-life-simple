@@ -1,9 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	// "os"
+)
 
 func main() {
-	height, width := readTwoNumbers()
+	height, width := readHeightWidth()
 
 	matrix := make([][]bool, height)
 	for i := range matrix {
@@ -89,37 +92,60 @@ func printMatrixSimple(matrix *[][]bool) { //
 	fmt.Println("=======================")
 }
 
-func readTwoNumbers() (int, int) {
+func readHeightWidth() (int, int) {
+	fmt.Printf("Enter height and width: ")
+	
 	inp := readLine()
-	has_space := false
+	hasSpace := false
 	var num1, num2 string
 
 	if len(inp) == 0 {
-		return -1, -1
+		fmt.Printf("Please enter two numbers in format: <h w>\n\n")
+		return readHeightWidth()
 	}
 
-	for i, c := range inp {
-		if c == ' ' {
-			if has_space || i == 0 {
-				return -1, -1
-			}
-			has_space = true
-		} else if c < '0' || c > '9' {
-			return -1, -1
-		} else {
-			if has_space {
-				num2 += string(c)
+	i := 0
+	for i < len(inp) {
+		if inp[i] == ' ' {
+			if !hasSpace {
+				for inp[i] == ' ' {
+					i++
+				}
+				hasSpace = true
 			} else {
-				num1 += string(c)
+				for i < len(inp) {
+					if inp[i] != ' ' {
+						fmt.Printf("Please enter two numbers in format: <h w>\n\n")
+						return readHeightWidth()
+					}
+					i++
+				}
 			}
+		} else if inp[i] < '0' || inp[i] > '9' {
+			fmt.Printf("Please enter two numbers in format: <h w>\n\n")
+			return readHeightWidth()
+		} else {
+			if hasSpace {
+				num2 += string(inp[i])
+			} else {
+				num1 += string(inp[i])
+			}
+			i++
 		}
 	}
 
-	if len(num2) == 0 {
-		return -1, -1
+	if len(num1) == 0 || len(num2) == 0 {
+		fmt.Printf("Please enter two numbers in format: <h w>\n\n")
+		return readHeightWidth()
+	}
+	
+	h, w := stringToInt(num1), stringToInt(num2)
+	if h < 3 || w < 3 {
+		fmt.Printf("Height and width should be at least 3.\n\n")
+		return readHeightWidth()
 	}
 
-	return stringToInt(num1), stringToInt(num2)
+	return h, w
 }
 
 func readLine() string {
@@ -142,4 +168,20 @@ func stringToInt(s string) int {
 		n = n*10 + int(rune(c)-'0')
 	}
 	return n
+}
+
+func printUsage() {
+	fmt.Printf(`Usage: go run main.go [options]
+
+Options:
+  --help        : Show the help message and exit
+  --verbose     : Display detailed information about the simulation, including grid size, number of ticks, speed, and map name
+  --delay-ms=X  : Set the animation speed in milliseconds. Default is 2500 milliseconds
+  --file=X      : Load the initial grid from a specified file
+  --edges-portal: Enable portal edges where cells that exit the grid appear on the opposite side
+  --random=HxW  : Generate a random grid of the specified width (W) and height (H)
+  --fullscreen  : Adjust the grid to fit the terminal size with empty cells
+  --footprints  : Add traces of visited cells, displayed as '∘'
+  --colored     : Add color to live cells and traces if footprints are enabled
+`)
 }
