@@ -3,31 +3,94 @@ package main
 import "fmt"
 
 func main() {
-	height, width := ReadTwoNumbers()
+	height, width := readTwoNumbers()
 
 	matrix := make([][]bool, height)
 	for i := range matrix {
 		matrix[i] = make([]bool, width)
 	}
 
-	correct := InputMatrix(&matrix)
-	if !correct {
-		//
-	}
+	// correct := InputMatrix(&matrix)
+	// if !correct {
+	// 	//
+	// }
 
-	Game(&matrix)
+	game(&matrix)
 }
 
-func Game(matrix *[][]bool) {
-	PrintMatrix(matrix)
+func game(matrix *[][]bool) {
+	printMatrixSimple(matrix)
+	
+	height := len(*matrix)
+	width := len((*matrix)[0])
 
-	if alive {
-		Game()
+	neighbourCount := make([][]int, height)
+	for i := 0; i < height; i++ {
+		neighbourCount[i] = make([]int, width)
+	}
+	
+	for i := 0; i < height; i++ {
+		for j := 0; j < width; j++ {
+			if (*matrix)[i][j] {
+				for y := i - 1; y <= i + 1; y++ {
+					for x := j - 1; x <= j + 1; x++ {
+						if y == i && x == j {
+							continue
+						}
+						if y < 0 || x < 0 || y >= height || x >= width {
+							continue
+						}
+						neighbourCount[y][x]++
+					}
+				}
+			}
+		}
+	}
+	
+	gameContinues := false
+	for i := 0; i < height; i++ {
+		for j := 0; j < width; j++ {
+			if (*matrix)[i][j] {
+				if neighbourCount[i][j] == 2 || neighbourCount[i][j] == 3 {
+					gameContinues = true
+				} else {
+					(*matrix)[i][j] = false
+				}
+			} else {
+				if neighbourCount[i][j] == 3 {
+					(*matrix)[i][j] = true
+					gameContinues = true
+				}
+			}
+		}
+	}
+	
+	if !gameContinues {
+		printMatrixSimple(matrix)
+	} else {
+		game(matrix)
 	}
 }
 
-func ReadTwoNumbers() (int, int) {
-	inp := ReadLine()
+func printMatrixSimple(matrix *[][]bool) { //
+	height := len(*matrix)
+	width := len((*matrix)[0])
+	
+	for i := 0; i < height; i++ {
+		for j := 0; j < width; j++ {
+			if (*matrix)[i][j] {
+				fmt.Printf("x")
+			} else {
+				fmt.Printf(".")
+			}
+		}
+		fmt.Println()
+	}
+	fmt.Println("=======================")
+}
+
+func readTwoNumbers() (int, int) {
+	inp := readLine()
 	has_space := false
 	var num1, num2 string
 
@@ -56,10 +119,10 @@ func ReadTwoNumbers() (int, int) {
 		return -1, -1
 	}
 
-	return StringToInt(num1), StringToInt(num2)
+	return stringToInt(num1), stringToInt(num2)
 }
 
-func ReadLine() string {
+func readLine() string {
 	var inp string
 	var r rune
 	fmt.Scanf("%c", &r)
@@ -70,7 +133,7 @@ func ReadLine() string {
 	return inp
 }
 
-func StringToInt(s string) int {
+func stringToInt(s string) int {
 	n := 0
 	for _, c := range s {
 		if c < '0' || c > '9' {
