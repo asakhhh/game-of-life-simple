@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"time"
+
+	"math/rand"
 )
 
 const (
@@ -38,13 +40,6 @@ var (
 	flagColored     *bool
 	tickNumber      int
 )
-
-/*
-About command line args:
---help conflicts with all other args
---random= and --file= conflict with each other
-all other args are ok
-*/
 
 func isValidArg(s string) bool {
 	if s == "--help" || s == "--verbose" || s == "--edges-portal" || s == "--fullscreen" || s == "--footprints" || s == "--colored" {
@@ -140,22 +135,22 @@ func main() {
 		os.Exit(0)
 	}
 
-	height, width := readHeightWidth()
-
-	matrix := make([][]bool, height)
-	used := make([][]bool, height)
-	for i := range matrix {
-		matrix[i] = make([]bool, width)
-		used[i] = make([]bool, width)
+	var matrix [][]bool
+	if len(*flagFile) != 0 {
+		FileGrid(&matrix)
+	} else if len(*flagRandom) != 0 {
+		RandomGrid(&matrix)
+	} else {
+		height, width := readHeightWidth()
+		SetSizeToMatrix(&matrix, height, width)
+		correct := inputMatrix(&matrix)
+		if !correct {
+			fmt.Printf("Your map input was invalid. Only . and # characters can be entered.\n")
+			return
+		}
 	}
 
-	correct := inputMatrix(&matrix, &used)
-	if !correct {
-		fmt.Printf("Your map input was invalid. Only . and # characters can be entered.\n")
-		return
-	}
-
-	game(&matrix, &used)
+	game(&matrix)
 }
 
 func game(matrix, used *[][]bool) {
@@ -383,4 +378,62 @@ func printVerbose(height, width, aliveCells int) {
 	fmt.Printf("Grid Size: %dx%d\n", height, width)
 	fmt.Printf("Live cells: %d\n", aliveCells)
 	fmt.Printf("DelayMs: %dms\n\n", *flagDelayms)
+}
+
+func FileGrid(matrix *[][]bool) bool {
+	if grid, err := os.ReadFile(*flagFile); err != nil {
+		fmt.Println("Game-of-Life:" + *flagFile + ": No such file or directory")
+		return false
+	} else {
+		var line []bool
+		for i, v := range string(grid) {
+			if v != '.' && v != '#' && v != '\n' {
+				fmt.Println("Invalid symbol in file")
+				return false
+			}
+			if v != '\n' {
+				line = append(line, v == '#')
+				if i != len(string(grid))-1 {
+					continue
+				}
+			}
+			if len(*matrix) != 0 && len((*matrix)[0]) != len(line) {
+				fmt.Println("Wrong size line of grid in file")
+				return false
+			}
+			*matrix = append(*matrix, line)
+			line = []bool{}
+		}
+		return true
+	}
+}
+
+func RandomGrid(matrix *[][]bool) {
+	h, w := readRandomWH()
+	if h < 3 || w < 3 {
+		fmt.Println("invalid size")
+		os.Exit(0)
+	}
+	SetSizeToMatrix(matrix, h, w)
+	for i := range *matrix {
+		for j := range (*matrix)[i] {
+			(*matrix)[i][j] = rand.Intn(2) == 0
+		}
+	}
+}
+
+func SetSizeToMatrix(matrix *[][]bool, h, w int) {
+	*matrix = make([][]bool, h)
+	for i := range *matrix {
+		(*matrix)[i] = make([]bool, w)
+	}
+}
+
+func readRandomWH() (int, int) {
+	for i, v := range *flagRandom {
+		if v == 'x' && i != len(*flagRandom)-1 {
+			return stringToInt((*flagRandom)[:i]), stringToInt((*flagRandom)[i+1:])
+		}
+	}
+	return 0, 0
 }
