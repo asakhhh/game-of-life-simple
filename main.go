@@ -81,6 +81,15 @@ func parseArgs() {
 	flagFullscreen = flag.Bool("fullscreen", false, "")
 	flagFootprints = flag.Bool("footprints", false, "")
 	flagColored = flag.Bool("colored", false, "")
+	
+	for i := 1; i < len(os.Args); i++ {
+		if len(os.Args[i]) > 10 && os.Args[i][:11] == "--delay-ms=" {
+			numstring := os.Args[i][11:]
+			if len(numstring) == 0 || stringToInt(numstring) == -1 {
+				os.Args[i] = os.Args[i][:11]+"-2"
+			}
+		}
+	}
 
 	flag.Parse()
 
@@ -111,7 +120,7 @@ func parseArgs() {
 
 func main() {
 	parseArgs()
-	if *flagDelayms == -1 {
+	if *flagDelayms < 0 {
 		*flagDelayms = 2500
 	}
 
