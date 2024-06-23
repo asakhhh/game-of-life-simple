@@ -121,6 +121,7 @@ func parseArgs() {
 func main() {
 	parseArgs()
 	if *flagDelayms < 0 {
+		fmt.Println("Delay in ms was either not set or inputted incorrectly. Default value of 2500 ms will be used.")
 		*flagDelayms = 2500
 	}
 
