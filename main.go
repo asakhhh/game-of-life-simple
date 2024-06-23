@@ -3,6 +3,39 @@ package main
 import (
 	"fmt"
 	"flag"
+	"os"
+	"time"
+)
+
+const (
+	Reset         = "\033[0m"
+	Red           = "\033[31m"
+	Green         = "\033[32m"
+	Yellow        = "\033[33m"
+	Blue          = "\033[34m"
+	Magenta       = "\033[35m"
+	Cyan          = "\033[36m"
+	Gray          = "\033[37m"
+	White         = "\033[97m"
+	BrightGreen   = "\033[92m"
+	BrightYellow  = "\033[93m"
+	BrightBlue    = "\033[94m"
+	BrightMagenta = "\033[95m"
+	BrightCyan    = "\033[96m"
+	BrightWhite   = "\033[97m"
+	BrightRed     = "\033[91m"
+)
+
+var (
+	flagHelp		*bool
+	flagVerbose		*bool
+	flagDelayms		*int
+	flagFile		*string
+	flagEdgesPortal	*bool
+	flagRandom		*string
+	flagFullscreen	*bool
+	flagFootprints	*bool
+	flagColored		*bool
 )
 
 /*
@@ -12,7 +45,106 @@ About command line args:
 all other args are ok
 */
 
+func isValidArg(s string) bool {
+	if s == "--help" {
+		return true
+	}
+	if s == "--verbose" {
+		return true
+	}
+	if s == "--edges-portal" {
+		return true
+	}
+	if s == "--fullscreen" {
+		return true
+	}
+	if s == "--footprints" {
+		return true
+	}
+	if s == "--colored" {
+		return true
+	}
+	if len(s) > 10 && s[:11] == "--delay-ms=" {
+		return true
+	}
+	if len(s) > 6 && s[:7] == "--file=" {
+		return true
+	}
+	if len(s) > 8 && s[:9] == "--random=" {
+		return true
+	}
+	return false
+}
+
+func parseArgs() {
+	var t []string
+	t = append(t, os.Args[0])
+	for i := 1; i < len(os.Args); i++ {
+		if isValidArg(os.Args[i]) {
+			t = append(t, os.Args[i])
+		}
+	}
+	os.Args = t
+	
+	flagHelp = flag.Bool("help", false, "")
+	flagVerbose = flag.Bool("verbose", false, "")
+	flagDelayms = flag.Int("delay-ms", -1, "")
+	flagFile = flag.String("file", "", "")
+	flagEdgesPortal = flag.Bool("edges-portal", false, "")
+	flagRandom = flag.String("random", "", "")
+	flagFullscreen = flag.Bool("fullscreen", false, "")
+	flagFootprints = flag.Bool("footprints", false, "")
+	flagColored = flag.Bool("colored", false, "")
+	
+	flag.Parse()
+	
+	if *flagHelp {
+		if *flagVerbose || *flagDelayms != -1 || *flagFile != "" || *flagEdgesPortal || *flagRandom != "" || *flagFullscreen || *flagFootprints || *flagColored {
+			for i := 1; i < len(os.Args); i++ {
+				if os.Args[i] == "--help" {
+					return
+				} else {
+					*flagHelp = false
+					return
+				}
+			}
+		}
+	} else {
+		if *flagRandom != "" && *flagFile != "" {
+			for i := 1; i < len(os.Args); i++ {
+				if os.Args[i][:7] == "--file=" {
+					*flagRandom = ""
+					return
+				} else if os.Args[i][:9] == "--random=" {
+					*flagFile = ""
+					return
+				}
+			}
+		}
+	}
+}
+
 func main() {
+	parseArgs()
+	if *flagDelayms == -1 {
+		*flagDelayms = 2500
+	}
+	
+	// fmt.Println("--help: ", *flagHelp)
+	// fmt.Println("--verbose: ", *flagVerbose)
+	// fmt.Println("--delay-ms: ", *flagDelayms)
+	// fmt.Println("--file: ", *flagFile)
+	// fmt.Println("--edges-portal: ", *flagEdgesPortal)
+	// fmt.Println("--random: ", *flagRandom)
+	// fmt.Println("--fullscreen: ", *flagFullscreen)
+	// fmt.Println("--footprints: ", *flagFootprints)
+	// fmt.Println("--colored: ", *flagColored)
+	
+	if *flagHelp {
+		printHelp()
+		return
+	}
+	
 	height, width := readHeightWidth()
 
 	matrix := make([][]bool, height)
@@ -20,16 +152,18 @@ func main() {
 		matrix[i] = make([]bool, width)
 	}
 
-	// correct := InputMatrix(&matrix)
-	// if !correct {
-	// 	//
-	// }
+	correct := inputMatrix(&matrix)
+	if !correct {
+		fmt.Printf("Your map input was invalid. Only . and # characters can be entered.\n")
+		return
+	}
 
 	game(&matrix)
 }
 
 func game(matrix *[][]bool) {
-	printMatrixSimple(matrix)
+	printMatrix(matrix)
+	time.Sleep(time.Duration(*flagDelayms) * time.Millisecond)
 	
 	height := len(*matrix)
 	width := len((*matrix)[0])
@@ -76,27 +210,24 @@ func game(matrix *[][]bool) {
 	}
 	
 	if !gameContinues {
-		printMatrixSimple(matrix)
+		printMatrix(matrix)
 	} else {
 		game(matrix)
 	}
 }
 
-func printMatrixSimple(matrix *[][]bool) { //
-	height := len(*matrix)
-	width := len((*matrix)[0])
-	
-	for i := 0; i < height; i++ {
-		for j := 0; j < width; j++ {
-			if (*matrix)[i][j] {
-				fmt.Printf("x")
+func printMatrix(matrix *[][]bool) {
+	fmt.Println()
+	for _, row := range *matrix {
+		for _, cell := range row {
+			if cell {
+				fmt.Print("× ")
 			} else {
-				fmt.Printf(".")
+				fmt.Print("· ")
 			}
 		}
 		fmt.Println()
 	}
-	fmt.Println("=======================")
 }
 
 func readHeightWidth() (int, int) {
@@ -177,18 +308,42 @@ func stringToInt(s string) int {
 	return n
 }
 
-func printUsage() {
-	fmt.Printf(`Usage: go run main.go [options]
+func printHelp() {
+	fmt.Println("Welcome to the ", Green+"Game of Life"+Reset+"!")
+	fmt.Println("This simulation models the evolution of cells on a grid. Each cell can be alive or dead, and its state changes based on its neighbors. \n")
+	fmt.Println("Usage: go run main.go [options]\n")
+	fmt.Println("Options:")
+	fmt.Println(Blue + "  --help   " + Reset + "      : Show the help message and exit")
+	fmt.Println(Blue + "  --verbose" + Reset + "      : Display detailed information about the simulation, including grid size, number of ticks, speed, and map name")
+	fmt.Println(Blue + "  --delay-ms=X" + Reset + "   : Set the animation speed in milliseconds. Default is 2500 milliseconds")
+	fmt.Println(Blue + "  --file=X" + Reset + "       : Load the initial grid from a specified file")
+	fmt.Println(Blue + "  --edges-portal" + Reset + " : Enable portal edges where cells that exit the grid appear on the opposite side")
+	fmt.Println(Blue + "  --random=WxH" + Reset + "   : Generate a random grid of the specified width (W) and height (H)")
+	fmt.Println(Blue + "  --fullscreen" + Reset + "   : Adjust the grid to fit the terminal size with empty cells")
+	fmt.Println(Blue + "  --footprints" + Reset + "   : Add traces of visited cells, displayed as '∘'")
+	fmt.Println(Blue + "  --colored" + Reset + "      : Add color to live cells and traces if footprints are enabled")
+	fmt.Println()
+	os.Exit(0)
+}
 
-Options:
-  --help        : Show the help message and exit
-  --verbose     : Display detailed information about the simulation, including grid size, number of ticks, speed, and map name
-  --delay-ms=X  : Set the animation speed in milliseconds. Default is 2500 milliseconds
-  --file=X      : Load the initial grid from a specified file
-  --edges-portal: Enable portal edges where cells that exit the grid appear on the opposite side
-  --random=HxW  : Generate a random grid of the specified width (W) and height (H)
-  --fullscreen  : Adjust the grid to fit the terminal size with empty cells
-  --footprints  : Add traces of visited cells, displayed as '∘'
-  --colored     : Add color to live cells and traces if footprints are enabled
-`)
+func inputMatrix(matrix *[][]bool) bool {
+	for i := range *matrix {
+		if line := readLine(); len(line) == len((*matrix)[i]) && checkLineOfMatrix(&line) {
+			for j, v := range line {
+				(*matrix)[i][j] = v == '#'
+			}
+		} else {
+			return false
+		}
+	}
+	return true
+}
+
+func checkLineOfMatrix(line *string) bool {
+	for _, v := range *line {
+		if v != '.' && v != '#' {
+			return false
+		}
+	}
+	return true
 }

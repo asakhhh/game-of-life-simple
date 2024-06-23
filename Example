@@ -47,6 +47,7 @@ func printMatrix(matrix [][]bool) {
 		}
 		fmt.Println()
 	}
+	fmt.Println()
 }
 
 func CheckArgs() int {
@@ -96,6 +97,7 @@ func PrintHelp() {
 
 	fmt.Println("Welcome to the ", Green+"Game of Life"+Reset+"!")
 	fmt.Println("This simulation models the evolution of cells on a grid. Each cell can be alive or dead, and its state changes based on its neighbors. \n")
+	fmt.Println("Usage: go run main.go [options]\n")
 	fmt.Println("Options:")
 	fmt.Println(Blue + "  --verbose" + Reset + "      : Display detailed information about the simulation, including grid size, number of ticks, speed, and map name")
 	fmt.Println(Blue + "  --delay-ms=X" + Reset + "   : Set the animation speed in milliseconds. Default is 2500 milliseconds")
