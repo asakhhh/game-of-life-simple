@@ -139,7 +139,7 @@ func main() {
 		used[i] = make([]bool, width)
 	}
 
-	correct := inputMatrix(&matrix)
+	correct := inputMatrix(&matrix, &used)
 	if !correct {
 		fmt.Printf("Your map input was invalid. Only . and # characters can be entered.\n")
 		return
@@ -148,7 +148,7 @@ func main() {
 	game(&matrix, &used)
 }
 
-func game(matrix *[][]bool) {
+func game(matrix, used *[][]bool) {
 	printMatrix(matrix, used)
 	time.Sleep(time.Duration(*flagDelayms) * time.Millisecond)
 
@@ -168,10 +168,14 @@ func game(matrix *[][]bool) {
 						if y == i && x == j {
 							continue
 						}
-						if y < 0 || x < 0 || y >= height || x >= width {
-							continue
+						if *flagEdgesPortal {
+							neighbourCount[(y + height)%height][(x+width)%width]++
+						} else {
+							if y < 0 || x < 0 || y >= height || x >= width {
+								continue
+							}
+							neighbourCount[y][x]++
 						}
-						neighbourCount[y][x]++
 					}
 				}
 			}
@@ -191,6 +195,7 @@ func game(matrix *[][]bool) {
 			} else {
 				if neighbourCount[i][j] == 3 {
 					(*matrix)[i][j] = true
+					(*used)[i][j] = true
 					gameContinues = true
 					gameChanged = true
 				}
@@ -224,12 +229,14 @@ func printMatrix(matrix, used *[][]bool) {
 		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
 	}
 
-	for _, row := range *matrix {
-		for _, cell := range row {
-			if cell {
-				fmt.Print("× ")
+	for y := range *matrix {
+		for x := range (*matrix)[0] {
+			if (*matrix)[y][x] {
+				fmt.Printf("× ")
+			} else if *flagFootprints && (*used)[y][x] {
+				fmt.Printf("∘ ")
 			} else {
-				fmt.Print("· ")
+				fmt.Printf("· ")
 			}
 		}
 		fmt.Println()
@@ -332,11 +339,12 @@ func printHelp() {
 	os.Exit(0)
 }
 
-func inputMatrix(matrix *[][]bool) bool {
+func inputMatrix(matrix, used *[][]bool) bool {
 	for i := range *matrix {
 		if line := readLine(); len(line) == len((*matrix)[i]) && checkLineOfMatrix(&line) {
 			for j, v := range line {
 				(*matrix)[i][j] = v == '#'
+				(*used)[i][j] = v == '#'
 			}
 		} else {
 			return false
