@@ -124,7 +124,7 @@ func main() {
 		fmt.Println("Delay in ms was either not set or inputted incorrectly. Default value of 2500 ms will be used.")
 		*flagDelayms = 2500
 	}
-
+	
 	// fmt.Println("--help: ", *flagHelp)
 	// fmt.Println("--verbose: ", *flagVerbose)
 	// fmt.Println("--delay-ms: ", *flagDelayms)
