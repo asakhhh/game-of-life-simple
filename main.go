@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"flag"
+	"fmt"
 	"os"
 	"time"
 )
@@ -27,16 +27,16 @@ const (
 )
 
 var (
-	flagHelp		*bool
-	flagVerbose		*bool
-	flagDelayms		*int
-	flagFile		*string
-	flagEdgesPortal	*bool
-	flagRandom		*string
-	flagFullscreen	*bool
-	flagFootprints	*bool
-	flagColored		*bool
-	tickNumber		int
+	flagHelp        *bool
+	flagVerbose     *bool
+	flagDelayms     *int
+	flagFile        *string
+	flagEdgesPortal *bool
+	flagRandom      *string
+	flagFullscreen  *bool
+	flagFootprints  *bool
+	flagColored     *bool
+	tickNumber      int
 )
 
 /*
@@ -71,7 +71,7 @@ func parseArgs() {
 		}
 	}
 	os.Args = t
-	
+
 	flagHelp = flag.Bool("help", false, "")
 	flagVerbose = flag.Bool("verbose", false, "")
 	flagDelayms = flag.Int("delay-ms", -1, "")
@@ -81,9 +81,9 @@ func parseArgs() {
 	flagFullscreen = flag.Bool("fullscreen", false, "")
 	flagFootprints = flag.Bool("footprints", false, "")
 	flagColored = flag.Bool("colored", false, "")
-	
+
 	flag.Parse()
-	
+
 	if *flagHelp {
 		if *flagVerbose || *flagDelayms != -1 || *flagFile != "" || *flagEdgesPortal || *flagRandom != "" || *flagFullscreen || *flagFootprints || *flagColored {
 			for i := 1; i < len(os.Args); i++ {
@@ -91,20 +91,19 @@ func parseArgs() {
 					return
 				} else {
 					*flagHelp = false
-					return
+					break
 				}
 			}
 		}
-	} else {
-		if *flagRandom != "" && *flagFile != "" {
-			for i := 1; i < len(os.Args); i++ {
-				if os.Args[i][:7] == "--file=" {
-					*flagRandom = ""
-					return
-				} else if os.Args[i][:9] == "--random=" {
-					*flagFile = ""
-					return
-				}
+	}
+	if *flagRandom != "" && *flagFile != "" {
+		for i := 1; i < len(os.Args); i++ {
+			if os.Args[i][:7] == "--file=" {
+				*flagRandom = ""
+				return
+			} else if os.Args[i][:9] == "--random=" {
+				*flagFile = ""
+				return
 			}
 		}
 	}
@@ -115,7 +114,7 @@ func main() {
 	if *flagDelayms == -1 {
 		*flagDelayms = 2500
 	}
-	
+
 	// fmt.Println("--help: ", *flagHelp)
 	// fmt.Println("--verbose: ", *flagVerbose)
 	// fmt.Println("--delay-ms: ", *flagDelayms)
@@ -125,12 +124,12 @@ func main() {
 	// fmt.Println("--fullscreen: ", *flagFullscreen)
 	// fmt.Println("--footprints: ", *flagFootprints)
 	// fmt.Println("--colored: ", *flagColored)
-	
+
 	if *flagHelp {
 		printHelp()
-		return
+		os.Exit(0)
 	}
-	
+
 	height, width := readHeightWidth()
 
 	matrix := make([][]bool, height)
@@ -150,7 +149,7 @@ func main() {
 func game(matrix *[][]bool) {
 	printMatrix(matrix)
 	time.Sleep(time.Duration(*flagDelayms) * time.Millisecond)
-	
+
 	height := len(*matrix)
 	width := len((*matrix)[0])
 
@@ -158,12 +157,12 @@ func game(matrix *[][]bool) {
 	for i := 0; i < height; i++ {
 		neighbourCount[i] = make([]int, width)
 	}
-	
+
 	for i := 0; i < height; i++ {
 		for j := 0; j < width; j++ {
 			if (*matrix)[i][j] {
-				for y := i - 1; y <= i + 1; y++ {
-					for x := j - 1; x <= j + 1; x++ {
+				for y := i - 1; y <= i+1; y++ {
+					for x := j - 1; x <= j+1; x++ {
 						if y == i && x == j {
 							continue
 						}
@@ -176,7 +175,7 @@ func game(matrix *[][]bool) {
 			}
 		}
 	}
-	
+
 	gameContinues, gameChanged := false, false
 	for i := 0; i < height; i++ {
 		for j := 0; j < width; j++ {
@@ -196,7 +195,7 @@ func game(matrix *[][]bool) {
 			}
 		}
 	}
-	
+
 	if !gameChanged {
 		fmt.Println("\nThe cell evolution has stopped at this state.")
 	} else if !gameContinues {
@@ -210,7 +209,7 @@ func game(matrix *[][]bool) {
 func printMatrix(matrix *[][]bool) {
 	fmt.Println("=====================================")
 	tickNumber++
-	
+
 	if *flagVerbose {
 		aliveCells := 0
 		for _, row := range *matrix {
@@ -222,7 +221,7 @@ func printMatrix(matrix *[][]bool) {
 		}
 		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
 	}
-	
+
 	for _, row := range *matrix {
 		for _, cell := range row {
 			if cell {
@@ -237,7 +236,7 @@ func printMatrix(matrix *[][]bool) {
 
 func readHeightWidth() (int, int) {
 	fmt.Printf("Enter height and width: ")
-	
+
 	inp := readLine()
 	hasSpace := false
 	var num1, num2 string
@@ -281,7 +280,7 @@ func readHeightWidth() (int, int) {
 		fmt.Printf("Please enter two numbers in format: <h w>\n\n")
 		return readHeightWidth()
 	}
-	
+
 	h, w := stringToInt(num1), stringToInt(num2)
 	if h < 3 || w < 3 {
 		fmt.Printf("Height and width should be at least 3.\n\n")
