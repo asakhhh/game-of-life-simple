@@ -94,19 +94,27 @@ func parseArgs() {
 	}
 
 	flag.Parse()
-
 	if *flagHelp {
-		if *flagVerbose || *flagDelayms != -1 || *flagFile != "" || *flagEdgesPortal || *flagRandom != "" || *flagFullscreen || *flagFootprints || *flagColored {
-			for i := 1; i < len(os.Args); i++ {
-				if os.Args[i] == "--help" {
-					return
-				} else {
-					*flagHelp = false
-					break
-				}
+		for i := 1; i < len(os.Args); i++ {
+			if os.Args[i] == "--help" {
+				return
 			}
 		}
+		*flagHelp = false
 	}
+
+	//if *flagHelp {
+	//	if *flagVerbose || *flagDelayms != -1 || *flagFile != "" || *flagEdgesPortal || *flagRandom != "" || *flagFullscreen || *flagFootprints || *flagColored {
+	//		for i := 1; i < len(os.Args); i++ {
+	//			if os.Args[i] == "--help" {
+	//				return
+	//			} else {
+	//				*flagHelp = false
+	//				break
+	//			}
+	//		}
+	//	}
+	//}
 	if *flagRandom != "" && *flagFile != "" {
 		for i := 1; i < len(os.Args); i++ {
 			if os.Args[i][:7] == "--file=" {
@@ -126,7 +134,7 @@ func main() {
 		fmt.Println("Delay in ms was either not set or inputted incorrectly. Default value of 2500 ms will be used.")
 		*flagDelayms = 2500
 	}
-	
+
 	// fmt.Println("--help: ", *flagHelp)
 	// fmt.Println("--verbose: ", *flagVerbose)
 	// fmt.Println("--delay-ms: ", *flagDelayms)
@@ -151,6 +159,7 @@ func main() {
 	} else {
 		height, width := readHeightWidth()
 		SetSizeToMatrix(&matrix, height, width)
+		SetSizeToMatrix(&used, height, width)
 		correct := inputMatrix(&matrix, &used)
 		if !correct {
 			fmt.Printf("Your map input was invalid. Only . and # characters can be entered.\n")
@@ -348,8 +357,10 @@ func stringToInt(s string) int {
 
 func printHelp() {
 	fmt.Println("Welcome to the ", Green+"Game of Life"+Reset+"!")
-	fmt.Println("This simulation models the evolution of cells on a grid. Each cell can be alive or dead, and its state changes based on its neighbors. \n")
-	fmt.Println("Usage: go run main.go [options]\n")
+	fmt.Println("This simulation models the evolution of cells on a grid. Each cell can be alive or dead, and its state changes based on its neighbors.")
+	fmt.Println()
+	fmt.Println("Usage: go run main.go [options]")
+	fmt.Println()
 	fmt.Println("Options:")
 	fmt.Println(Blue + "  --help   " + Reset + "      : Show the help message and exit")
 	fmt.Println(Blue + "  --verbose" + Reset + "      : Display detailed information about the simulation, including grid size, number of ticks, speed, and map name")
@@ -361,7 +372,6 @@ func printHelp() {
 	fmt.Println(Blue + "  --footprints" + Reset + "   : Add traces of visited cells, displayed as '∘'")
 	fmt.Println(Blue + "  --colored" + Reset + "      : Add color to live cells and traces if footprints are enabled")
 	fmt.Println()
-	os.Exit(0)
 }
 
 func inputMatrix(matrix, used *[][]bool) bool {
