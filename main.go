@@ -2,8 +2,15 @@ package main
 
 import (
 	"fmt"
-	// "os"
+	"flag"
 )
+
+/*
+About command line args:
+--help conflicts with all other args
+--random= and --file= conflict with each other
+all other args are ok
+*/
 
 func main() {
 	height, width := readHeightWidth()
