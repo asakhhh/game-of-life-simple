@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	tsize "github.com/kopoli/go-terminal-size"
+	"math/rand"
 	"os"
 	"time"
-
-	"math/rand"
 )
 
 const (
@@ -166,10 +166,27 @@ func main() {
 			return
 		}
 	}
-	for i := range matrix {
-		used = append(used, make([]bool, len(matrix[0])))
-		for j := range matrix[0] {
-			used[i][j] = matrix[i][j]
+	//for i := range matrix {
+	//	used = append(used, make([]bool, len(matrix[0])))
+	//	for j := range matrix[0] {
+	//		used[i][j] = matrix[i][j]
+	//	}
+	//}
+	if *flagFullscreen {
+		termHeight, termWidth := getTerminalSize()
+		if len(matrix) > termHeight {
+			matrix = matrix[:termHeight]
+		}
+		for i := range matrix {
+			if len(matrix[i]) > termWidth {
+				matrix[i] = matrix[i][:termWidth]
+			}
+		}
+		SetSizeToMatrix(&used, len(matrix), len(matrix[0]))
+		for i := range matrix {
+			for j := range matrix[i] {
+				used[i][j] = matrix[i][j]
+			}
 		}
 	}
 
@@ -238,42 +255,6 @@ func game(matrix, used *[][]bool) {
 		fmt.Println("\nNo live cells left.")
 	} else {
 		game(matrix, used)
-	}
-}
-
-func printMatrix(matrix, used *[][]bool) {
-	fmt.Println("=====================================")
-	tickNumber++
-
-	if *flagVerbose {
-		aliveCells := 0
-		for _, row := range *matrix {
-			for _, cell := range row {
-				if cell {
-					aliveCells++
-				}
-			}
-		}
-		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
-	}
-
-	for y := range *matrix {
-		for x := range (*matrix)[0] {
-			if (*matrix)[y][x] {
-				if *flagColored {
-					fmt.Print(Green)
-				}
-				fmt.Printf("× " + Reset)
-			} else if *flagFootprints && (*used)[y][x] {
-				if *flagColored {
-					fmt.Print(Yellow)
-				}
-				fmt.Printf("∘ " + Reset)
-			} else {
-				fmt.Printf("· ")
-			}
-		}
-		fmt.Println()
 	}
 }
 
@@ -460,3 +441,94 @@ func readRandomWH() (int, int) {
 	}
 	return 0, 0
 }
+func getTerminalSize() (int, int) {
+	size, err := tsize.GetSize()
+	if err != nil {
+		fmt.Println("Error getting terminal size:", err)
+		os.Exit(1)
+	}
+	return size.Height, size.Width
+}
+
+func printMatrix(matrix, used *[][]bool) {
+	fmt.Println("=====================================")
+	tickNumber++
+
+	if *flagVerbose {
+		aliveCells := 0
+		for _, row := range *matrix {
+			for _, cell := range row {
+				if cell {
+					aliveCells++
+				}
+			}
+		}
+		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
+	}
+
+	height, width := len(*matrix), len((*matrix)[0])
+	if *flagFullscreen {
+		termHeight, termWidth := getTerminalSize()
+		if height > termHeight {
+			height = termHeight
+		}
+		if width > termWidth {
+			width = termWidth
+		}
+	}
+
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			if (*matrix)[y][x] {
+				if *flagColored {
+					fmt.Print(Green)
+				}
+				fmt.Printf("× " + Reset)
+			} else if *flagFootprints && (*used)[y][x] {
+				if *flagColored {
+					fmt.Print(Yellow)
+				}
+				fmt.Printf("∘ " + Reset)
+			} else {
+				fmt.Printf("· ")
+			}
+		}
+		fmt.Println()
+	}
+}
+
+//func printMatrix(matrix, used *[][]bool) {
+//	fmt.Println("=====================================")
+//	tickNumber++
+//
+//	if *flagVerbose {
+//		aliveCells := 0
+//		for _, row := range *matrix {
+//			for _, cell := range row {
+//				if cell {
+//					aliveCells++
+//				}
+//			}
+//		}
+//		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
+//	}
+//
+//	for y := range *matrix {
+//		for x := range (*matrix)[0] {
+//			if (*matrix)[y][x] {
+//				if *flagColored {
+//					fmt.Print(Green)
+//				}
+//				fmt.Printf("× " + Reset)
+//			} else if *flagFootprints && (*used)[y][x] {
+//				if *flagColored {
+//					fmt.Print(Yellow)
+//				}
+//				fmt.Printf("∘ " + Reset)
+//			} else {
+//				fmt.Printf("· ")
+//			}
+//		}
+//		fmt.Println()
+//	}
+//}
