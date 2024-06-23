@@ -41,6 +41,13 @@ var (
 	tickNumber      int
 )
 
+/*
+About command line args:
+--help conflicts with all other args
+--random= and --file= conflict with each other
+all other args are ok
+*/
+
 func isValidArg(s string) bool {
 	if s == "--help" || s == "--verbose" || s == "--edges-portal" || s == "--fullscreen" || s == "--footprints" || s == "--colored" {
 		return true
@@ -135,22 +142,22 @@ func main() {
 		os.Exit(0)
 	}
 
-	var matrix [][]bool
-	if len(*flagFile) != 0 {
-		FileGrid(&matrix)
-	} else if len(*flagRandom) != 0 {
-		RandomGrid(&matrix)
-	} else {
-		height, width := readHeightWidth()
-		SetSizeToMatrix(&matrix, height, width)
-		correct := inputMatrix(&matrix)
-		if !correct {
-			fmt.Printf("Your map input was invalid. Only . and # characters can be entered.\n")
-			return
-		}
+	height, width := readHeightWidth()
+
+	matrix := make([][]bool, height)
+	used := make([][]bool, height)
+	for i := range matrix {
+		matrix[i] = make([]bool, width)
+		used[i] = make([]bool, width)
 	}
 
-	game(&matrix)
+	correct := inputMatrix(&matrix, &used)
+	if !correct {
+		fmt.Printf("Your map input was invalid. Only . and # characters can be entered.\n")
+		return
+	}
+
+	game(&matrix, &used)
 }
 
 func game(matrix, used *[][]bool) {
@@ -437,3 +444,4 @@ func readRandomWH() (int, int) {
 	}
 	return 0, 0
 }
+
