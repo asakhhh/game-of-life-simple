@@ -74,7 +74,7 @@ func parseArgs() {
 
 	flagHelp = flag.Bool("help", false, "")
 	flagVerbose = flag.Bool("verbose", false, "")
-	flagDelayms = flag.Int("delay-ms", -1, "")
+	flagDelayms = flag.Int("delay-ms", -1, "") // validation
 	flagFile = flag.String("file", "", "")
 	flagEdgesPortal = flag.Bool("edges-portal", false, "")
 	flagRandom = flag.String("random", "", "")
@@ -133,8 +133,10 @@ func main() {
 	height, width := readHeightWidth()
 
 	matrix := make([][]bool, height)
+	used := make([][]bool, height)
 	for i := range matrix {
 		matrix[i] = make([]bool, width)
+		used[i] = make([]bool, width)
 	}
 
 	correct := inputMatrix(&matrix)
@@ -143,11 +145,11 @@ func main() {
 		return
 	}
 
-	game(&matrix)
+	game(&matrix, &used)
 }
 
 func game(matrix *[][]bool) {
-	printMatrix(matrix)
+	printMatrix(matrix, used)
 	time.Sleep(time.Duration(*flagDelayms) * time.Millisecond)
 
 	height := len(*matrix)
@@ -199,14 +201,14 @@ func game(matrix *[][]bool) {
 	if !gameChanged {
 		fmt.Println("\nThe cell evolution has stopped at this state.")
 	} else if !gameContinues {
-		printMatrix(matrix)
+		printMatrix(matrix, used)
 		fmt.Println("\nNo live cells left.")
 	} else {
-		game(matrix)
+		game(matrix, used)
 	}
 }
 
-func printMatrix(matrix *[][]bool) {
+func printMatrix(matrix, used *[][]bool) {
 	fmt.Println("=====================================")
 	tickNumber++
 
