@@ -169,7 +169,7 @@ func game(matrix, used *[][]bool) {
 							continue
 						}
 						if *flagEdgesPortal {
-							neighbourCount[(y + height)%height][(x+width)%width]++
+							neighbourCount[(y+height)%height][(x+width)%width]++
 						} else {
 							if y < 0 || x < 0 || y >= height || x >= width {
 								continue
@@ -232,9 +232,15 @@ func printMatrix(matrix, used *[][]bool) {
 	for y := range *matrix {
 		for x := range (*matrix)[0] {
 			if (*matrix)[y][x] {
-				fmt.Printf("× ")
+				if *flagColored {
+					fmt.Print(Green)
+				}
+				fmt.Printf("× " + Reset)
 			} else if *flagFootprints && (*used)[y][x] {
-				fmt.Printf("∘ ")
+				if *flagColored {
+					fmt.Print(Yellow)
+				}
+				fmt.Printf("∘ " + Reset)
 			} else {
 				fmt.Printf("· ")
 			}
