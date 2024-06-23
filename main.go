@@ -36,6 +36,7 @@ var (
 	flagFullscreen	*bool
 	flagFootprints	*bool
 	flagColored		*bool
+	tickNumber		int
 )
 
 /*
@@ -46,22 +47,7 @@ all other args are ok
 */
 
 func isValidArg(s string) bool {
-	if s == "--help" {
-		return true
-	}
-	if s == "--verbose" {
-		return true
-	}
-	if s == "--edges-portal" {
-		return true
-	}
-	if s == "--fullscreen" {
-		return true
-	}
-	if s == "--footprints" {
-		return true
-	}
-	if s == "--colored" {
+	if s == "--help" || s == "--verbose" || s == "--edges-portal" || s == "--fullscreen" || s == "--footprints" || s == "--colored" {
 		return true
 	}
 	if len(s) > 10 && s[:11] == "--delay-ms=" {
@@ -191,7 +177,7 @@ func game(matrix *[][]bool) {
 		}
 	}
 	
-	gameContinues := false
+	gameContinues, gameChanged := false, false
 	for i := 0; i < height; i++ {
 		for j := 0; j < width; j++ {
 			if (*matrix)[i][j] {
@@ -199,25 +185,44 @@ func game(matrix *[][]bool) {
 					gameContinues = true
 				} else {
 					(*matrix)[i][j] = false
+					gameChanged = true
 				}
 			} else {
 				if neighbourCount[i][j] == 3 {
 					(*matrix)[i][j] = true
 					gameContinues = true
+					gameChanged = true
 				}
 			}
 		}
 	}
 	
-	if !gameContinues {
+	if !gameChanged {
+		fmt.Println("\nThe cell evolution has stopped at this state.")
+	} else if !gameContinues {
 		printMatrix(matrix)
+		fmt.Println("\nNo live cells left.")
 	} else {
 		game(matrix)
 	}
 }
 
 func printMatrix(matrix *[][]bool) {
-	fmt.Println()
+	fmt.Println("=====================================")
+	tickNumber++
+	
+	if *flagVerbose {
+		aliveCells := 0
+		for _, row := range *matrix {
+			for _, cell := range row {
+				if cell {
+					aliveCells++
+				}
+			}
+		}
+		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
+	}
+	
 	for _, row := range *matrix {
 		for _, cell := range row {
 			if cell {
@@ -346,4 +351,11 @@ func checkLineOfMatrix(line *string) bool {
 		}
 	}
 	return true
+}
+
+func printVerbose(height, width, aliveCells int) {
+	fmt.Printf("Tick: %d\n", tickNumber)
+	fmt.Printf("Grid Size: %dx%d\n", height, width)
+	fmt.Printf("Live cells: %d\n", aliveCells)
+	fmt.Printf("DelayMs: %dms\n\n", *flagDelayms)
 }
