@@ -53,13 +53,13 @@ func isValidArg(s string) bool {
 	if s == "--help" || s == "--verbose" || s == "--edges-portal" || s == "--fullscreen" || s == "--footprints" || s == "--colored" {
 		return true
 	}
-	if len(s) > 10 && s[:11] == "--delay-ms=" {
+	if len(s) > 11 && s[:11] == "--delay-ms=" {
 		return true
 	}
-	if len(s) > 6 && s[:7] == "--file=" {
+	if len(s) > 7 && s[:7] == "--file=" {
 		return true
 	}
-	if len(s) > 8 && s[:9] == "--random=" {
+	if len(s) > 9 && s[:9] == "--random=" {
 		return true
 	}
 	return false
@@ -75,14 +75,16 @@ func parseArgs() {
 			errArgs = append(errArgs, os.Args[i])
 		}
 	}
-	fmt.Printf("The following arguments were incorrect: " + Red)
-	for i, v := range errArgs {
-		fmt.Printf("%s", v)
-		if i != len(errArgs)-1 {
-			fmt.Printf(", ")
+	if len(errArgs) > 0 {
+		fmt.Printf("The following arguments were incorrect: " + Red)
+		for i, v := range errArgs {
+			fmt.Printf("%s", v)
+			if i != len(errArgs)-1 {
+				fmt.Printf(", ")
+			}
 		}
+		fmt.Println("\n" + Reset)
 	}
-	fmt.Println("\n" + Reset)
 
 	os.Args = t
 
@@ -129,10 +131,6 @@ func parseArgs() {
 
 func main() {
 	parseArgs()
-	if !*flagHelp && *flagDelayms < 0 {
-		fmt.Println("Delay in ms was either not set or inputted incorrectly. Default value of 2500 ms will be used.")
-		*flagDelayms = 2500
-	}
 
 	if *flagHelp {
 		printHelp()
@@ -152,7 +150,7 @@ func main() {
 		correct := inputMatrix(&matrix)
 		if !correct {
 			fmt.Printf("Your map input was invalid. Only . and # characters can be entered.\n")
-			return
+			os.Exit(1)
 		}
 	}
 	for i := range matrix {
@@ -177,6 +175,10 @@ func main() {
 	// 	}
 	// }
 
+	if !*flagHelp && *flagDelayms < 0 {
+		fmt.Println("Delay in ms was either not set or inputted incorrectly. Default value of 2500 ms will be used.")
+		*flagDelayms = 2500
+	}
 	game(&matrix, &used)
 }
 
@@ -373,7 +375,7 @@ func printVerbose(height, width, aliveCells int) {
 
 func FileGrid(matrix *[][]bool) {
 	if grid, err := os.ReadFile(*flagFile); err != nil {
-		fmt.Println("Game-of-Life:" + *flagFile + ": No such file or directory")
+		fmt.Println("Game-of-Life: " + *flagFile + ": No such file or directory")
 		os.Exit(1)
 	} else {
 		var line []bool
@@ -451,7 +453,7 @@ func printMatrix(matrix, used *[][]bool) {
 	// }
 
 	fmt.Println()
-	for x := 0; x < termWidth; x++ {
+	for x := 0; x < termWidth && (!*flagFullscreen || x < width*2); x++ {
 		fmt.Printf("=")
 	}
 	fmt.Println()
@@ -470,31 +472,54 @@ func printMatrix(matrix, used *[][]bool) {
 		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
 	}
 
-	verboseTrim := 0
-	if *flagVerbose {
-		verboseTrim = 5
-	}
-	for y := 0; y < height && y < termHeight-verboseTrim; y++ {
-		for x := 0; x < width && x*2 < termWidth; x++ {
-			if (*matrix)[y][x] {
-				if *flagColored {
-					fmt.Print(Green)
+	if *flagFullscreen {
+		verboseTrim := 0
+		if *flagVerbose {
+			verboseTrim = 5
+		}
+		for y := 0; y < height && y < termHeight-verboseTrim; y++ {
+			for x := 0; x < width && x*2 < termWidth; x++ {
+				if (*matrix)[y][x] {
+					if *flagColored {
+						fmt.Print(Green)
+					}
+					fmt.Printf("× " + Reset)
+				} else if *flagFootprints && (*used)[y][x] {
+					if *flagColored {
+						fmt.Print(Yellow)
+					}
+					fmt.Printf("∘ " + Reset)
+				} else {
+					fmt.Printf("· ")
 				}
-				fmt.Printf("× " + Reset)
-			} else if *flagFootprints && (*used)[y][x] {
-				if *flagColored {
-					fmt.Print(Yellow)
-				}
-				fmt.Printf("∘ " + Reset)
-			} else {
-				fmt.Printf("· ")
+			}
+			if (termHeight-verboseTrim > height && y != height-1) || (termHeight-verboseTrim <= height && y != termHeight-1-verboseTrim) {
+				fmt.Println()
 			}
 		}
-		if (termHeight > height && y != height-1) || (termHeight <= height && y != termHeight-1-verboseTrim) {
+		for y := height; y < termHeight-1-verboseTrim; y++ {
 			fmt.Println()
 		}
-	}
-	for y := height; y < termHeight-1-verboseTrim; y++ {
-		fmt.Println()
+	} else {
+		for y := 0; y < height; y++ {
+			for x := 0; x < width; x++ {
+				if (*matrix)[y][x] {
+					if *flagColored {
+						fmt.Print(Green)
+					}
+					fmt.Printf("× " + Reset)
+				} else if *flagFootprints && (*used)[y][x] {
+					if *flagColored {
+						fmt.Print(Yellow)
+					}
+					fmt.Printf("∘ " + Reset)
+				} else {
+					fmt.Printf("· ")
+				}
+			}
+			if y != height-1 {
+				fmt.Println()
+			}
+		}
 	}
 }
