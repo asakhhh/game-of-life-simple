@@ -1,6 +1,9 @@
 package game
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 func printMatrix(matrix, used *[][]bool) {
 	height, width := len(*matrix), len((*matrix)[0])
@@ -8,11 +11,13 @@ func printMatrix(matrix, used *[][]bool) {
 
 	termHeight, termWidth = getTerminalSize()
 
-	fmt.Println()
-	for x := 0; x < termWidth && (!*FlagFullscreen || x < width*2); x++ {
-		fmt.Printf("=")
+	fmt.Fprintf(buf, "\n")
+	if !*FlagFullscreen {
+		for x := 0; x < termWidth && (!*FlagFullscreen || x < width*2); x++ {
+			fmt.Fprintf(buf, "=")
+		}
 	}
-	fmt.Println()
+	fmt.Fprintf(buf, "\n")
 
 	TickNumber++
 
@@ -25,7 +30,7 @@ func printMatrix(matrix, used *[][]bool) {
 				}
 			}
 		}
-		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
+		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells, buf)
 	}
 
 	verboseTrim := 0
@@ -36,37 +41,40 @@ func printMatrix(matrix, used *[][]bool) {
 		for x := 0; x < width && x < termWidth/2; x++ {
 			if (*matrix)[y][x] {
 				if *FlagColored {
-					fmt.Print(Green)
+					fmt.Fprintf(buf, Green)
 				}
 				if !*FlagAlternative {
-					fmt.Printf("× " + Reset)
+					fmt.Fprintf(buf, "× "+Reset)
 				} else {
-					fmt.Printf("██" + Reset)
+					fmt.Fprintf(buf, "██"+Reset)
 				}
 			} else if *FlagFootprints && (*used)[y][x] {
 				if *FlagColored {
-					fmt.Print(Yellow)
+					fmt.Fprintf(buf, Yellow)
 				}
 				if !*FlagAlternative {
-					fmt.Printf("∘ " + Reset)
+					fmt.Fprintf(buf, "∘ "+Reset)
 				} else {
-					fmt.Printf("██" + Reset)
+					fmt.Fprintf(buf, "██"+Reset)
 				}
 			} else {
 				if !*FlagAlternative {
-					fmt.Printf("· ")
+					fmt.Fprintf(buf, "· ")
 				} else {
-					fmt.Printf("██")
+					fmt.Fprintf(buf, "██")
 				}
 			}
 		}
 		if (termHeight-verboseTrim > height && y != height-1) || (termHeight-verboseTrim <= height && y != termHeight-1-verboseTrim) {
-			fmt.Println()
+			fmt.Fprintf(buf, "\n")
 		}
 	}
 	for y := height; y < termHeight-1-verboseTrim; y++ {
-		fmt.Println()
+		fmt.Fprintf(buf, "\n")
 	}
+
+	fmt.Printf((*buf).String())
+	(*buf).Reset()
 }
 
 func ResizeMatrix(matrix, used *[][]bool) {
@@ -90,11 +98,11 @@ func ResizeMatrix(matrix, used *[][]bool) {
 	}
 }
 
-func printVerbose(height, width, aliveCells int) {
-	fmt.Printf("Tick: %d\n", TickNumber)
-	fmt.Printf("Grid Size: %dx%d\n", height, width)
-	fmt.Printf("Live cells: %d\n", aliveCells)
-	fmt.Printf("DelayMs: %dms\n\n", *FlagDelayms)
+func printVerbose(height, width, aliveCells int, buf *bytes.Buffer) {
+	fmt.Fprintf(buf, "Tick: %d\n", TickNumber)
+	fmt.Fprintf(buf, "Grid Size: %dx%d\n", height, width)
+	fmt.Fprintf(buf, "Live cells: %d\n", aliveCells)
+	fmt.Fprintf(buf, "DelayMs: %dms\n\n", *FlagDelayms)
 }
 
 func PrintHelp() {

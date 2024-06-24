@@ -1,6 +1,7 @@
 package game
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 )
@@ -37,9 +38,11 @@ var (
 	FlagColored     *bool
 	FlagAlternative *bool
 	TickNumber      int
+	buf             *(bytes.Buffer)
 )
 
 func Game(matrix, used *[][]bool) {
+	buf = new(bytes.Buffer)
 	for {
 		printMatrix(matrix, used)
 		time.Sleep(time.Duration(*FlagDelayms) * time.Millisecond)
