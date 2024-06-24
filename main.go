@@ -337,7 +337,7 @@ func printHelp() {
 	fmt.Println(Blue + "  --delay-ms=X" + Reset + "   : Set the animation speed in milliseconds. Default is 2500 milliseconds")
 	fmt.Println(Blue + "  --file=X" + Reset + "       : Load the initial grid from a specified file")
 	fmt.Println(Blue + "  --edges-portal" + Reset + " : Enable portal edges where cells that exit the grid appear on the opposite side")
-	fmt.Println(Blue + "  --random=WxH" + Reset + "   : Generate a random grid of the specified width (W) and height (H)")
+	fmt.Println(Blue + "  --random=HxW" + Reset + "   : Generate a random grid of the specified height (H) and width (W)")
 	fmt.Println(Blue + "  --fullscreen" + Reset + "   : Adjust the grid to fit the terminal size with empty cells")
 	fmt.Println(Blue + "  --footprints" + Reset + "   : Add traces of visited cells, displayed as '∘'")
 	fmt.Println(Blue + "  --colored" + Reset + "      : Add color to live cells and traces if footprints are enabled")
@@ -401,7 +401,7 @@ func FileGrid(matrix *[][]bool) {
 }
 
 func RandomGrid(matrix *[][]bool) {
-	h, w := readRandomWH()
+	h, w := readRandomHW()
 	if h < 3 || w < 3 {
 		fmt.Println("invalid size")
 		os.Exit(0)
@@ -421,7 +421,7 @@ func SetSizeToMatrix(matrix *[][]bool, h, w int) {
 	}
 }
 
-func readRandomWH() (int, int) {
+func readRandomHW() (int, int) {
 	for i, v := range *flagRandom {
 		if v == 'x' && i != len(*flagRandom)-1 {
 			return stringToInt((*flagRandom)[:i]), stringToInt((*flagRandom)[i+1:])
