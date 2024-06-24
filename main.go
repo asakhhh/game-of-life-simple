@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	tsize "github.com/kopoli/go-terminal-size"
 	"math/rand"
 	"os"
 	"time"
+
+	tsize "github.com/kopoli/go-terminal-size"
 )
 
 const (
@@ -65,18 +66,29 @@ func isValidArg(s string) bool {
 }
 
 func parseArgs() {
-	var t []string
+	var t, errArgs []string
 	t = append(t, os.Args[0])
 	for i := 1; i < len(os.Args); i++ {
 		if isValidArg(os.Args[i]) {
 			t = append(t, os.Args[i])
+		} else {
+			errArgs = append(errArgs, os.Args[i])
 		}
 	}
+	fmt.Printf("The following arguments were incorrect: " + Red)
+	for i, v := range errArgs {
+		fmt.Printf("%s", v)
+		if i != len(errArgs)-1 {
+			fmt.Printf(", ")
+		}
+	}
+	fmt.Println("\n" + Reset)
+
 	os.Args = t
 
 	flagHelp = flag.Bool("help", false, "")
 	flagVerbose = flag.Bool("verbose", false, "")
-	flagDelayms = flag.Int("delay-ms", -1, "") // validation
+	flagDelayms = flag.Int("delay-ms", -1, "")
 	flagFile = flag.String("file", "", "")
 	flagEdgesPortal = flag.Bool("edges-portal", false, "")
 	flagRandom = flag.String("random", "", "")
@@ -94,27 +106,14 @@ func parseArgs() {
 	}
 
 	flag.Parse()
+
 	if *flagHelp {
-		for i := 1; i < len(os.Args); i++ {
-			if os.Args[i] == "--help" {
-				return
-			}
+		if os.Args[1] == "--help" {
+			return
 		}
 		*flagHelp = false
 	}
 
-	//if *flagHelp {
-	//	if *flagVerbose || *flagDelayms != -1 || *flagFile != "" || *flagEdgesPortal || *flagRandom != "" || *flagFullscreen || *flagFootprints || *flagColored {
-	//		for i := 1; i < len(os.Args); i++ {
-	//			if os.Args[i] == "--help" {
-	//				return
-	//			} else {
-	//				*flagHelp = false
-	//				break
-	//			}
-	//		}
-	//	}
-	//}
 	if *flagRandom != "" && *flagFile != "" {
 		for i := 1; i < len(os.Args); i++ {
 			if os.Args[i][:7] == "--file=" {
@@ -130,20 +129,10 @@ func parseArgs() {
 
 func main() {
 	parseArgs()
-	if *flagDelayms < 0 {
+	if !*flagHelp && *flagDelayms < 0 {
 		fmt.Println("Delay in ms was either not set or inputted incorrectly. Default value of 2500 ms will be used.")
 		*flagDelayms = 2500
 	}
-
-	// fmt.Println("--help: ", *flagHelp)
-	// fmt.Println("--verbose: ", *flagVerbose)
-	// fmt.Println("--delay-ms: ", *flagDelayms)
-	// fmt.Println("--file: ", *flagFile)
-	// fmt.Println("--edges-portal: ", *flagEdgesPortal)
-	// fmt.Println("--random: ", *flagRandom)
-	// fmt.Println("--fullscreen: ", *flagFullscreen)
-	// fmt.Println("--footprints: ", *flagFootprints)
-	// fmt.Println("--colored: ", *flagColored)
 
 	if *flagHelp {
 		printHelp()
@@ -160,35 +149,33 @@ func main() {
 		height, width := readHeightWidth()
 		SetSizeToMatrix(&matrix, height, width)
 		SetSizeToMatrix(&used, height, width)
-		correct := inputMatrix(&matrix, &used)
+		correct := inputMatrix(&matrix)
 		if !correct {
 			fmt.Printf("Your map input was invalid. Only . and # characters can be entered.\n")
 			return
 		}
 	}
-	//for i := range matrix {
-	//	used = append(used, make([]bool, len(matrix[0])))
-	//	for j := range matrix[0] {
-	//		used[i][j] = matrix[i][j]
-	//	}
-	//}
-	if *flagFullscreen {
-		termHeight, termWidth := getTerminalSize()
-		if len(matrix) > termHeight {
-			matrix = matrix[:termHeight]
-		}
-		for i := range matrix {
-			if len(matrix[i]) > termWidth {
-				matrix[i] = matrix[i][:termWidth]
-			}
-		}
-		SetSizeToMatrix(&used, len(matrix), len(matrix[0]))
-		for i := range matrix {
-			for j := range matrix[i] {
-				used[i][j] = matrix[i][j]
-			}
+	for i := range matrix {
+		used = append(used, make([]bool, len(matrix[0])))
+		for j := range matrix[0] {
+			used[i][j] = matrix[i][j]
 		}
 	}
+	// if *flagFullscreen {
+	// 	termHeight, termWidth := getTerminalSize()
+	// 	if len(matrix) > termHeight {
+	// 		matrix = matrix[:termHeight]
+	// 	}
+	// 	for i := range matrix {
+	// 		if len(matrix[i]) > termWidth/2 {
+	// 			matrix[i] = matrix[i][:termWidth/2]
+	// 		}
+	// 	}
+	// 	SetSizeToMatrix(&used, len(matrix), len(matrix[0]))
+	// 	for i := range matrix {
+	// 		copy(used[i], matrix[i])
+	// 	}
+	// }
 
 	game(&matrix, &used)
 }
@@ -355,12 +342,11 @@ func printHelp() {
 	fmt.Println()
 }
 
-func inputMatrix(matrix, used *[][]bool) bool {
+func inputMatrix(matrix *[][]bool) bool {
 	for i := range *matrix {
 		if line := readLine(); len(line) == len((*matrix)[i]) && checkLineOfMatrix(&line) {
 			for j, v := range line {
 				(*matrix)[i][j] = v == '#'
-				(*used)[i][j] = v == '#'
 			}
 		} else {
 			return false
@@ -441,6 +427,7 @@ func readRandomWH() (int, int) {
 	}
 	return 0, 0
 }
+
 func getTerminalSize() (int, int) {
 	size, err := tsize.GetSize()
 	if err != nil {
@@ -451,7 +438,24 @@ func getTerminalSize() (int, int) {
 }
 
 func printMatrix(matrix, used *[][]bool) {
-	fmt.Println("=====================================")
+	height, width := len(*matrix), len((*matrix)[0])
+	var termHeight, termWidth int
+
+	termHeight, termWidth = getTerminalSize()
+
+	// if *flagFullscreen {
+	// 	termHeight, termWidth = getTerminalSize()
+	// } else {
+	// 	termHeight = height
+	// 	termWidth = width
+	// }
+
+	fmt.Println()
+	for x := 0; x < termWidth; x++ {
+		fmt.Printf("=")
+	}
+	fmt.Println()
+
 	tickNumber++
 
 	if *flagVerbose {
@@ -466,19 +470,12 @@ func printMatrix(matrix, used *[][]bool) {
 		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
 	}
 
-	height, width := len(*matrix), len((*matrix)[0])
-	if *flagFullscreen {
-		termHeight, termWidth := getTerminalSize()
-		if height > termHeight {
-			height = termHeight
-		}
-		if width > termWidth {
-			width = termWidth
-		}
+	verboseTrim := 0
+	if *flagVerbose {
+		verboseTrim = 5
 	}
-
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := 0; y < height && y < termHeight-verboseTrim; y++ {
+		for x := 0; x < width && x*2 < termWidth; x++ {
 			if (*matrix)[y][x] {
 				if *flagColored {
 					fmt.Print(Green)
@@ -493,42 +490,11 @@ func printMatrix(matrix, used *[][]bool) {
 				fmt.Printf("· ")
 			}
 		}
+		if (termHeight > height && y != height-1) || (termHeight <= height && y != termHeight-1-verboseTrim) {
+			fmt.Println()
+		}
+	}
+	for y := height; y < termHeight-1-verboseTrim; y++ {
 		fmt.Println()
 	}
 }
-
-//func printMatrix(matrix, used *[][]bool) {
-//	fmt.Println("=====================================")
-//	tickNumber++
-//
-//	if *flagVerbose {
-//		aliveCells := 0
-//		for _, row := range *matrix {
-//			for _, cell := range row {
-//				if cell {
-//					aliveCells++
-//				}
-//			}
-//		}
-//		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
-//	}
-//
-//	for y := range *matrix {
-//		for x := range (*matrix)[0] {
-//			if (*matrix)[y][x] {
-//				if *flagColored {
-//					fmt.Print(Green)
-//				}
-//				fmt.Printf("× " + Reset)
-//			} else if *flagFootprints && (*used)[y][x] {
-//				if *flagColored {
-//					fmt.Print(Yellow)
-//				}
-//				fmt.Printf("∘ " + Reset)
-//			} else {
-//				fmt.Printf("· ")
-//			}
-//		}
-//		fmt.Println()
-//	}
-//}
