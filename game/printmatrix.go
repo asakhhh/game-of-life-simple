@@ -28,79 +28,65 @@ func printMatrix(matrix, used *[][]bool) {
 		printVerbose(len(*matrix), len((*matrix)[0]), aliveCells)
 	}
 
-	if *FlagFullscreen {
-		verboseTrim := 0
-		if *FlagVerbose {
-			verboseTrim = 5
-		}
-		for y := 0; y < height && y < termHeight-verboseTrim; y++ {
-			for x := 0; x < width && x < termWidth/2; x++ {
-				if (*matrix)[y][x] {
-					if *FlagColored {
-						fmt.Print(Green)
-					}
-					if !*FlagAlternative {
-						fmt.Printf("× " + Reset)
-					} else {
-						fmt.Printf("██" + Reset)
-					}
-				} else if *FlagFootprints && (*used)[y][x] {
-					if *FlagColored {
-						fmt.Print(Yellow)
-					}
-					if !*FlagAlternative {
-						fmt.Printf("∘ " + Reset)
-					} else {
-						fmt.Printf("██" + Reset)
-					}
+	verboseTrim := 0
+	if *FlagVerbose {
+		verboseTrim = 5
+	}
+	for y := 0; y < height && y < termHeight-verboseTrim; y++ {
+		for x := 0; x < width && x < termWidth/2; x++ {
+			if (*matrix)[y][x] {
+				if *FlagColored {
+					fmt.Print(Green)
+				}
+				if !*FlagAlternative {
+					fmt.Printf("× " + Reset)
 				} else {
-					if !*FlagAlternative {
-						fmt.Printf("· ")
-					} else {
-						fmt.Printf("██")
-					}
+					fmt.Printf("██" + Reset)
+				}
+			} else if *FlagFootprints && (*used)[y][x] {
+				if *FlagColored {
+					fmt.Print(Yellow)
+				}
+				if !*FlagAlternative {
+					fmt.Printf("∘ " + Reset)
+				} else {
+					fmt.Printf("██" + Reset)
+				}
+			} else {
+				if !*FlagAlternative {
+					fmt.Printf("· ")
+				} else {
+					fmt.Printf("██")
 				}
 			}
-			if (termHeight-verboseTrim > height && y != height-1) || (termHeight-verboseTrim <= height && y != termHeight-1-verboseTrim) {
-				fmt.Println()
-			}
 		}
-		for y := height; y < termHeight-1-verboseTrim; y++ {
+		if (termHeight-verboseTrim > height && y != height-1) || (termHeight-verboseTrim <= height && y != termHeight-1-verboseTrim) {
 			fmt.Println()
 		}
-	} else {
-		for y := 0; y < height; y++ {
-			for x := 0; x < width; x++ {
-				if (*matrix)[y][x] {
-					if *FlagColored {
-						fmt.Print(Green)
-					}
-					if !*FlagAlternative {
-						fmt.Printf("× " + Reset)
-					} else {
-						fmt.Printf("██" + Reset)
-					}
-				} else if *FlagFootprints && (*used)[y][x] {
-					if *FlagColored {
-						fmt.Print(Yellow)
-					}
-					if !*FlagAlternative {
-						fmt.Printf("∘ " + Reset)
-					} else {
-						fmt.Printf("██" + Reset)
-					}
-				} else {
-					if !*FlagAlternative {
-						fmt.Printf("· ")
-					} else {
-						fmt.Printf("██")
-					}
-				}
-			}
-			if y != height-1 {
-				fmt.Println()
+	}
+	for y := height; y < termHeight-1-verboseTrim; y++ {
+		fmt.Println()
+	}
+}
+
+func ResizeMatrix(matrix, used *[][]bool) {
+	height, width := len(*matrix), len((*matrix)[0])
+	termHeight, termWidth := getTerminalSize()
+	if termWidth/2 > width {
+		for x := width; x < termWidth/2; x++ {
+			for i := 0; i < height; i++ {
+				(*matrix)[i] = append((*matrix)[i], false)
+				(*used)[i] = append((*used)[i], false)
 			}
 		}
+		width = termWidth / 2
+	}
+	if termHeight > height {
+		for i := height; i < termHeight; i++ {
+			(*matrix) = append((*matrix), make([]bool, width))
+			(*used) = append((*used), make([]bool, width))
+		}
+		height = termHeight
 	}
 }
 

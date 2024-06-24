@@ -26,6 +26,9 @@ func main() {
 	} else {
 		game.InputMatrix(&matrix, &used) // Custom input
 	}
+	if *game.FlagFullscreen {
+		game.ResizeMatrix(&matrix, &used)
+	}
 
 	if *game.FlagDelayms < 0 {
 		fmt.Println(game.Blue + "Delay in ms was either not set or inputted incorrectly. Default value of 2500 ms will be used." + game.Reset)
