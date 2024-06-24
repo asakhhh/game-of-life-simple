@@ -34,7 +34,7 @@ func printMatrix(matrix, used *[][]bool) {
 			verboseTrim = 5
 		}
 		for y := 0; y < height && y < termHeight-verboseTrim; y++ {
-			for x := 0; x < width && x*2 < termWidth; x++ {
+			for x := 0; x < width && x < termWidth/2; x++ {
 				if (*matrix)[y][x] {
 					if *FlagColored {
 						fmt.Print(Green)
