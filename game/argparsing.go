@@ -7,7 +7,7 @@ import (
 )
 
 func IsValidArg(s string) bool {
-	if s == "--help" || s == "--verbose" || s == "--edges-portal" || s == "--fullscreen" || s == "--footprints" || s == "--colored" {
+	if s == "--help" || s == "--verbose" || s == "--edges-portal" || s == "--fullscreen" || s == "--footprints" || s == "--colored" || s == "--alternative" {
 		return true
 	}
 	if len(s) > 11 && s[:11] == "--delay-ms=" {
@@ -54,6 +54,7 @@ func ParseArgs() {
 	FlagFullscreen = flag.Bool("fullscreen", false, "")
 	FlagFootprints = flag.Bool("footprints", false, "")
 	FlagColored = flag.Bool("colored", false, "")
+	FlagAlternative = flag.Bool("alternative", false, "")
 
 	for i := 1; i < len(os.Args); i++ {
 		if len(os.Args[i]) > 10 && os.Args[i][:11] == "--delay-ms=" {

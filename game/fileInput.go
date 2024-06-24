@@ -11,6 +11,7 @@ func FileGrid(matrix, used *[][]bool) {
 		os.Exit(1)
 	} else {
 		var line []bool
+
 		for i, v := range string(grid) {
 			if v != '.' && v != '#' && v != '\n' {
 				fmt.Println("Invalid symbol in file")

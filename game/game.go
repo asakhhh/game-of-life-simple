@@ -15,6 +15,7 @@ const (
 	Cyan          = "\033[36m"
 	Gray          = "\033[37m"
 	White         = "\033[97m"
+	WhiteBG       = "\033[48;5;7m"
 	BrightGreen   = "\033[92m"
 	BrightYellow  = "\033[93m"
 	BrightBlue    = "\033[94m"
@@ -34,6 +35,7 @@ var (
 	FlagFullscreen  *bool
 	FlagFootprints  *bool
 	FlagColored     *bool
+	FlagAlternative *bool
 	TickNumber      int
 )
 

@@ -39,14 +39,26 @@ func printMatrix(matrix, used *[][]bool) {
 					if *FlagColored {
 						fmt.Print(Green)
 					}
-					fmt.Printf("× " + Reset)
+					if !*FlagAlternative {
+						fmt.Printf("× " + Reset)
+					} else {
+						fmt.Printf("██" + Reset)
+					}
 				} else if *FlagFootprints && (*used)[y][x] {
 					if *FlagColored {
 						fmt.Print(Yellow)
 					}
-					fmt.Printf("∘ " + Reset)
+					if !*FlagAlternative {
+						fmt.Printf("∘ " + Reset)
+					} else {
+						fmt.Printf("██" + Reset)
+					}
 				} else {
-					fmt.Printf("· ")
+					if !*FlagAlternative {
+						fmt.Printf("· ")
+					} else {
+						fmt.Printf("██")
+					}
 				}
 			}
 			if (termHeight-verboseTrim > height && y != height-1) || (termHeight-verboseTrim <= height && y != termHeight-1-verboseTrim) {
@@ -63,14 +75,26 @@ func printMatrix(matrix, used *[][]bool) {
 					if *FlagColored {
 						fmt.Print(Green)
 					}
-					fmt.Printf("× " + Reset)
+					if !*FlagAlternative {
+						fmt.Printf("× " + Reset)
+					} else {
+						fmt.Printf("██" + Reset)
+					}
 				} else if *FlagFootprints && (*used)[y][x] {
 					if *FlagColored {
 						fmt.Print(Yellow)
 					}
-					fmt.Printf("∘ " + Reset)
+					if !*FlagAlternative {
+						fmt.Printf("∘ " + Reset)
+					} else {
+						fmt.Printf("██" + Reset)
+					}
 				} else {
-					fmt.Printf("· ")
+					if !*FlagAlternative {
+						fmt.Printf("· ")
+					} else {
+						fmt.Printf("██")
+					}
 				}
 			}
 			if y != height-1 {
@@ -103,5 +127,6 @@ func PrintHelp() {
 	fmt.Println(Blue + "  --fullscreen" + Reset + "   : Adjust the grid to fit the terminal size with empty cells")
 	fmt.Println(Blue + "  --footprints" + Reset + "   : Add traces of visited cells, displayed as '∘'")
 	fmt.Println(Blue + "  --colored" + Reset + "      : Add color to live cells and traces if footprints are enabled")
+	fmt.Println(Blue + "  --alternative" + Reset + "  : Alternative visualization for the game. --colored arg is automatically included for this option.")
 	fmt.Println()
 }

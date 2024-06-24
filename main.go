@@ -28,8 +28,12 @@ func main() {
 	}
 
 	if *game.FlagDelayms < 0 {
-		fmt.Println("Delay in ms was either not set or inputted incorrectly. Default value of 2500 ms will be used.")
+		fmt.Println(game.Blue + "Delay in ms was either not set or inputted incorrectly. Default value of 2500 ms will be used." + game.Reset)
 		*game.FlagDelayms = 2500
+	}
+	if *game.FlagAlternative && !*game.FlagColored {
+		fmt.Println(game.Blue + "Alternative visualization will still include colors." + game.Reset)
+		*game.FlagColored = true
 	}
 
 	game.Game(&matrix, &used)
